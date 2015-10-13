@@ -16,7 +16,7 @@ type workerResponse struct {
 	idleDeath     bool
 }
 
-// The crawler itself, the master of the whole process
+// The crawler itself, the master of the whole process - comment
 type Crawler struct {
 	Options *Options
 
