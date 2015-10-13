@@ -14,6 +14,7 @@ type workerResponse struct {
 	harvestedURLs interface{}
 	host          string
 	idleDeath     bool
+	index         int
 }
 
 // The crawler itself, the master of the whole process
@@ -28,12 +29,13 @@ type Crawler struct {
 	wg              *sync.WaitGroup
 	pushPopRefCount int
 	visits          int
+	batchNumber     int
 
 	// keep lookups in maps, O(1) access time vs O(n) for slice. The empty struct value
 	// is of no use, but this is the smallest type possible - it uses no memory at all.
 	visited map[string]struct{}
 	hosts   map[string]struct{}
-	workers map[string]*worker
+	workers map[int]*worker
 }
 
 // Crawler constructor with a pre-initialized Options object.
@@ -92,14 +94,16 @@ func (this *Crawler) init(ctxs []*URLContext) {
 	this.visited = make(map[string]struct{}, l)
 	this.pushPopRefCount, this.visits = 0, 0
 
+	this.batchNumber = 0
+
 	// Create the workers map and the push channel (the channel used by workers
 	// to communicate back to the crawler)
 	this.stop = make(chan struct{})
 	if this.Options.SameHostOnly {
-		this.workers, this.push = make(map[string]*worker, hostCount),
+		this.workers, this.push = make(map[int]*worker, this.Options.MaxWorkers),
 			make(chan *workerResponse, hostCount)
 	} else {
-		this.workers, this.push = make(map[string]*worker, this.Options.HostBufferFactor*hostCount),
+		this.workers, this.push = make(map[int]*worker, this.Options.HostBufferFactor*hostCount),
 			make(chan *workerResponse, this.Options.HostBufferFactor*hostCount)
 	}
 	// Create and pass the enqueue channel
@@ -148,7 +152,7 @@ func (this *Crawler) setExtenderEnqueueChan() {
 // Launch a new worker goroutine for a given host.
 func (this *Crawler) launchWorker(ctx *URLContext) *worker {
 	// Initialize index and channels
-	i := len(this.workers) + 1
+	i := this.batchNumber % this.Options.MaxWorkers
 	pop := newPopChannel()
 
 	// Create the worker
@@ -170,7 +174,7 @@ func (this *Crawler) launchWorker(ctx *URLContext) *worker {
 	// Launch worker
 	go w.run()
 	this.logFunc(LogInfo, "worker %d launched for host %s", i, w.host)
-	this.workers[w.host] = w
+	this.workers[this.batchNumber%this.Options.MaxWorkers] = w
 
 	return w
 }
@@ -233,7 +237,8 @@ func (this *Crawler) enqueueUrls(ctxs []*URLContext) (cnt int) {
 			// flag. So this is an acceptable behaviour for gocrawl.
 
 			// Launch worker if required, based on the host of the normalized URL
-			w, ok := this.workers[ctx.normalizedURL.Host]
+
+			w, ok := this.workers[this.batchNumber%this.Options.MaxWorkers]
 			if !ok {
 				// No worker exists for this host, launch a new one
 				w = this.launchWorker(ctx)
@@ -253,7 +258,7 @@ func (this *Crawler) enqueueUrls(ctxs []*URLContext) (cnt int) {
 			this.Options.Extender.Enqueued(ctx)
 			w.pop.stack(ctx)
 			this.pushPopRefCount++
-
+			this.batchNumber++
 			// Once it is stacked, it WILL be visited eventually, so add it to the visited slice
 			// (unless denied by robots.txt, but this is out of our hands, for all we
 			// care, it is visited).
@@ -304,7 +309,7 @@ func (this *Crawler) collectUrls() error {
 			}
 			if res.idleDeath {
 				// The worker timed out from its Idle TTL delay, remove from active workers
-				delete(this.workers, res.host)
+				delete(this.workers, res.index)
 				this.logFunc(LogInfo, "worker for host %s cleared on idle policy", res.host)
 			} else {
 				this.enqueueUrls(this.toURLContexts(res.harvestedURLs, res.ctx.url))

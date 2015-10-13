@@ -102,14 +102,14 @@ func (this *worker) run() {
 
 // Checks if the given URL can be fetched based on robots.txt policies.
 func (this *worker) isAllowedPerRobotsPolicies(u *url.URL) bool {
-	if this.robotsGroup != nil {
-		// Is this URL allowed per robots.txt policy?
-		ok := this.robotsGroup.Test(u.Path)
-		if !ok {
-			this.logFunc(LogIgnored, "ignored on robots.txt policy: %s", u.String())
-		}
-		return ok
-	}
+	//	if this.robotsGroup != nil {
+	//		// Is this URL allowed per robots.txt policy?
+	//		ok := this.robotsGroup.Test(u.Path)
+	//		if !ok {
+	//			this.logFunc(LogIgnored, "ignored on robots.txt policy: %s", u.String())
+	//		}
+	//		return ok
+	//	}
 
 	// No robots.txt = everything is allowed
 	return true
@@ -158,7 +158,7 @@ func (this *worker) requestRobotsTxt(ctx *URLContext) {
 
 // Get the robots.txt group for this crawler.
 func (this *worker) getRobotsTxtGroup(ctx *URLContext, b []byte, res *http.Response) (g *robotstxt.Group) {
-	var data *robotstxt.RobotsData
+	//var data *robotstxt.RobotsData
 	var e error
 
 	if res != nil {
@@ -171,7 +171,7 @@ func (this *worker) getRobotsTxtGroup(ctx *URLContext, b []byte, res *http.Respo
 	}
 
 	if e == nil {
-		data, e = robotstxt.FromBytes(b)
+		//	data, e = robotstxt.FromBytes(b)
 	}
 
 	// If robots data cannot be parsed, will return nil, which will allow access by default.
@@ -181,7 +181,7 @@ func (this *worker) getRobotsTxtGroup(ctx *URLContext, b []byte, res *http.Respo
 		this.opts.Extender.Error(newCrawlError(nil, e, CekParseRobots))
 		this.logFunc(LogError, "ERROR parsing robots.txt for host %s: %s", this.host, e)
 	} else {
-		g = data.FindGroup(this.opts.RobotUserAgent)
+		//g = data.FindGroup(this.opts.RobotUserAgent)
 	}
 	return
 }
@@ -317,6 +317,7 @@ func (this *worker) sendResponse(ctx *URLContext, visited bool, harvested interf
 			harvested,
 			this.host,
 			idleDeath,
+			this.index,
 		}
 		this.push <- res
 	}

@@ -285,8 +285,8 @@ var (
 				},
 			},
 			asserts: a{
-				eMKEnqueued: 4, // Expect 3 Enqueued calls: robots, /pkg (redirects), /pkg/
-				eMKFilter:   3, // One for /pkg and one for /pkg/
+				eMKEnqueued: 4, // Expect 4 Enqueued calls: robots, /pkg (https) (redirects), /pkg (redirects), /pkg/
+				eMKFilter:   3, // One for /pkg, /pkg (https), and one for /pkg/
 				eMKVisit:    1, // Expect 1 visit : /pkg/ (robots don't trigger visited)
 			},
 		},
