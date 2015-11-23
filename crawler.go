@@ -42,6 +42,9 @@ type Crawler struct {
 func NewCrawlerWithOptions(opts *Options) *Crawler {
 	ret := new(Crawler)
 	ret.Options = opts
+	if ret.Options.MaxWorkers == 0 {
+		ret.Options.MaxWorkers = DefaultMaxWorkers
+	}
 	return ret
 }
 

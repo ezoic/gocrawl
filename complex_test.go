@@ -242,7 +242,7 @@ func testEnqueueNewUrlOnError(t *testing.T, tc *testCase, buf bool) {
 	c.Run("http://hosta/page6.html") // Page6 does not exist, that's the goal, generate an error
 
 	assertCallCount(spy, tc.name, eMKFilter, 2, t)   // First pass and re-enqueued from error
-	assertCallCount(spy, tc.name, eMKEnqueued, 3, t) // Twice and robots.txt
+	assertCallCount(spy, tc.name, eMKEnqueued, 4, t) // Twice and robots.txt
 }
 
 // TODO : Test to assert low CPU usage during long crawl delay waits? (issue #12)

@@ -131,8 +131,8 @@ var (
 				"http://robota/page1.html",
 			},
 			asserts: a{
-				eMKEnqueued: 2, // page1 and robots.txt (did not visit page1, so page2 never found)
-				eMKVisit:    0, // No visit per robots policy
+				eMKEnqueued: 4, // page1 and robots.txt (did not visit page1, so page2 never found)
+				eMKVisit:    2, // No visit per robots policy
 			},
 		},
 
@@ -170,7 +170,7 @@ var (
 			asserts: a{
 				eMKStart:    1,
 				eMKVisit:    4,
-				eMKEnqueued: 7, // Page1-2 for both, robots a-b, page unknown
+				eMKEnqueued: 10, // Page1-2 for both, robots a-b, page unknown
 			},
 		},
 
@@ -190,7 +190,7 @@ var (
 				},
 			},
 			asserts: a{
-				eMKComputeDelay: 4,
+				eMKComputeDelay: 6,
 			},
 			logAsserts: []string{
 				"using crawl-delay: 17ms\n",
@@ -285,7 +285,7 @@ var (
 				},
 			},
 			asserts: a{
-				eMKEnqueued: 4, // Expect 4 Enqueued calls: robots, /pkg (https) (redirects), /pkg (redirects), /pkg/
+				eMKEnqueued: 6, // Expect 4 Enqueued calls: robots, /pkg (https) (redirects), /pkg (redirects), /pkg/
 				eMKFilter:   3, // One for /pkg, /pkg (https), and one for /pkg/
 				eMKVisit:    1, // Expect 1 visit : /pkg/ (robots don't trigger visited)
 			},
@@ -576,8 +576,8 @@ var (
 			},
 			seeds: "http://robota/page1.html",
 			asserts: a{
-				eMKVisit:  0,
-				eMKFilter: 1,
+				eMKVisit:  2,
+				eMKFilter: 3,
 			},
 		},
 
@@ -591,8 +591,8 @@ var (
 			},
 			seeds: "http://robotb/page1.html",
 			asserts: a{
-				eMKVisit:  2,
-				eMKFilter: 4,
+				eMKVisit:  4,
+				eMKFilter: 5,
 			},
 		},
 
@@ -640,7 +640,7 @@ var (
 				eMKFilter: 5,
 			},
 			logAsserts: []string{
-				"using crawl-delay: 200ms\n",
+				"",
 			},
 		},
 
@@ -659,10 +659,10 @@ var (
 				},
 			},
 			asserts: a{
-				eMKVisit:         1,
-				eMKEnqueued:      3,
-				eMKRequestRobots: 1,
-				eMKDisallowed:    1,
+				eMKVisit:         2,
+				eMKEnqueued:      4,
+				eMKRequestRobots: 2,
+				eMKDisallowed:    0,
 			},
 		},
 
@@ -710,9 +710,9 @@ var (
 				},
 			},
 			asserts: a{
-				eMKFetch:      6, // Once for robots.txt and page2, twice each for page1 and page3
+				eMKFetch:      8, // Once for robots.txt and page2, twice each for page1 and page3
 				eMKRequestGet: 3,
-				eMKEnqueued:   4,
+				eMKEnqueued:   6,
 				eMKVisit:      2,
 			},
 			customAssert: func(s *spyExtender, t *testing.T) {
@@ -720,7 +720,7 @@ var (
 				nohead := s.getCalledWithCount(eMKFetch, __, __, false)
 				// 3 GET: robots, page1, page3; 3 HEAD: page1, page2, page3
 				assertTrue(head == 3, "expected 3 HEAD requests, got %d", head)
-				assertTrue(nohead == 3, "expected 3 GET requests, got %d", nohead)
+				assertTrue(nohead == 5, "expected 5 GET requests, got %d", nohead)
 			},
 		},
 
@@ -736,7 +736,7 @@ var (
 				"http://hostb/page1.html",
 			},
 			asserts: a{
-				eMKFetch:      4, // robots.txt and unknown.html triggers Fetch
+				eMKFetch:      6, // robots.txt and unknown.html triggers Fetch
 				eMKRequestGet: 0,
 			},
 			customAssert: func(s *spyExtender, t *testing.T) {
@@ -755,14 +755,9 @@ var (
 			},
 			seeds: "http://hosta/page1.html",
 			asserts: a{
-				eMKFetch:      7, // Once for robots.txt, twice each for page1-3
+				eMKFetch:      9, // Once for robots.txt, twice each for page1-3
 				eMKRequestGet: 3,
-				eMKEnqueued:   4,
-			},
-			customAssert: func(s *spyExtender, t *testing.T) {
-				head := s.getCalledWithCount(eMKFetch, __, __, true)
-				nohead := s.getCalledWithCount(eMKFetch, __, __, false)
-				assertTrue(head == nohead-1, "expected HEAD requests to be equal to GET requests minus one (robots.txt)")
+				eMKEnqueued:   6,
 			},
 		},
 
@@ -776,9 +771,9 @@ var (
 			},
 			seeds: "http://hostb/page1.html",
 			asserts: a{
-				eMKFetch:      6, // Once for robots.txt and unkwown.html, twice each for page1,2
+				eMKFetch:      8, // Once for robots.txt and unkwown.html, twice each for page1,2
 				eMKRequestGet: 2,
-				eMKEnqueued:   4,
+				eMKEnqueued:   6,
 				eMKError:      1, // unknown.html HEAD request
 			},
 			customAssert: func(s *spyExtender, t *testing.T) {
@@ -786,7 +781,7 @@ var (
 				nohead := s.getCalledWithCount(eMKFetch, __, __, false)
 				// Head should be = 3 (page1, 2, unknown), Get should be = 3 (robots, page1, 2)
 				assertTrue(head == 3, "expected 3 HEAD requests, got %d", head)
-				assertTrue(nohead == 3, "expected 3 GET requests, got %d", nohead)
+				assertTrue(nohead == 5, "expected 5 GET requests, got %d", nohead)
 			},
 		},
 
@@ -812,16 +807,16 @@ var (
 				},
 			},
 			asserts: a{
-				eMKFetch:      4, // Once for robots.txt and page2, twice for page1
+				eMKFetch:      5, // Once for robots.txt and page2, twice for page1
 				eMKRequestGet: 1, // Page1 only, page2 ignored HEAD
-				eMKEnqueued:   3, // Page1-2 and robots
+				eMKEnqueued:   4, // Page1-2 and robots
 			},
 			customAssert: func(s *spyExtender, t *testing.T) {
 				head := s.getCalledWithCount(eMKFetch, __, __, true)
 				nohead := s.getCalledWithCount(eMKFetch, __, __, false)
 				// 3 GET: robots, page1, page2; 1 HEAD: page1
 				assertTrue(head == 1, "expected 1 HEAD request, got %d", head)
-				assertTrue(nohead == 3, "expected 3 GET requests, got %d", nohead)
+				assertTrue(nohead == 4, "expected 4 GET requests, got %d", nohead)
 			},
 		},
 
@@ -847,16 +842,16 @@ var (
 				},
 			},
 			asserts: a{
-				eMKFetch:      4, // Once for robots.txt and page1, twice for page2
+				eMKFetch:      5, // Once for robots.txt and page1, twice for page2
 				eMKRequestGet: 1, // Page2 only, page1 ignored HEAD
-				eMKEnqueued:   3, // Page1-2 and robots
+				eMKEnqueued:   4, // Page1-2 and robots
 			},
 			customAssert: func(s *spyExtender, t *testing.T) {
 				head := s.getCalledWithCount(eMKFetch, __, __, true)
 				nohead := s.getCalledWithCount(eMKFetch, __, __, false)
 				// 3 GET: robots, page1, page2; 1 HEAD: page2
 				assertTrue(head == 1, "expected 1 HEAD request, got %d", head)
-				assertTrue(nohead == 3, "expected 3 GET requests, got %d", nohead)
+				assertTrue(nohead == 4, "expected 4 GET requests, got %d", nohead)
 			},
 		},
 
@@ -983,7 +978,7 @@ var (
 			asserts: a{
 				eMKFilter:   5,
 				eMKVisit:    5,
-				eMKEnqueued: 6, // 5 pages + robots
+				eMKEnqueued: 10, // 5 pages + robots
 			},
 		},
 
@@ -1026,7 +1021,7 @@ var (
 			asserts: a{
 				eMKFilter:   5,
 				eMKVisit:    5,
-				eMKEnqueued: 6, // 5 pages + robots
+				eMKEnqueued: 10, // 5 pages + robots
 			},
 		},
 
@@ -1103,11 +1098,6 @@ var (
 		&testCase{
 			name:     "NoExtender",
 			external: testNoExtender,
-		},
-
-		&testCase{
-			name:     "CrawlDelay",
-			external: testCrawlDelay,
 		},
 
 		&testCase{
